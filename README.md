@@ -45,6 +45,9 @@ This project answers:
 - Supplier Performance Analysis
 - Warehouse Performance Analysis
 - Forecast Accuracy Analysis
+- Window Functions (RANK, ROW_NUMBER, LAG, running totals)
+- Common Table Expressions (CTEs)
+- Joins across aggregated result sets
 
 ### Power BI
 
@@ -60,6 +63,7 @@ This project answers:
 
 ## 📊 Dataset
 
+- **Source:** Publicly available supply chain dataset
 - **Supply Chain Records:** 91,250
 - **Date Range:** January 2024 – December 2024
 - **SKUs:** 50
@@ -96,21 +100,23 @@ This project answers:
 | Total Units Sold | 1,829,979 |
 | Total Sales Value | 33,426,337.22 |
 | Total Gross Margin | 11,088,201.23 |
-| Total Inventory Value | 525,243,991.12 |
+| Total Inventory Value (sum of daily snapshots)* | 525,243,991.12 |
 | Average Inventory Level | 471.52 |
 | Average Demand Forecast | 20.08 |
 | Average Supplier Lead Time | 7.98 Days |
 | Average Inventory Coverage | 44.69 Days |
 | Records Below Reorder Point | 4,787 |
-| Inventory Risk | 5.25% |
+| Records Below Reorder Point (%) | 5.25% of records |
 | Mean Absolute Forecast Error | 2.38 |
+
+*Inventory value is summed across daily snapshots, so it is best read as a relative comparison between warehouses, not a balance-sheet figure.
 
 ---
 
 ## 🔍 Key Insights
 
 - **5.25% of inventory records were below the reorder point**, representing 4,787 potential inventory risk records.
-- **WH_2 held the highest inventory value**, approximately 121.4M.
+- **WH_2 held the highest inventory value** (sum of daily snapshots), approximately 121.4M.
 - **SUP_4 had the longest average supplier lead time of 8.64 days**.
 - **SUP_5 had the lowest average supplier lead time of 6.96 days**.
 - **SKU_18 recorded the highest total units sold**.
@@ -172,6 +178,16 @@ The analysis included:
 - Supplier lead-time analysis
 - Warehouse inventory risk analysis
 
+### Advanced SQL (MySQL 8.0+)
+
+- **Supplier ranking** by average lead time using `RANK() OVER`
+- **Monthly sales running total and month-over-month growth** using `SUM() OVER` and `LAG()`
+- **Top 3 SKUs within each warehouse** using `ROW_NUMBER() OVER (PARTITION BY ...)` inside CTEs
+- **Regional gross margin ranking and share of total margin** using `RANK() OVER` and `SUM() OVER ()`
+- **SKU sales vs. inventory risk** by joining two aggregated CTEs
+- **Warehouse risk vs. company-wide average** using a CTE benchmark and `CROSS JOIN`
+- **Average daily inventory value** to complement the summed snapshot metric
+
 ---
 
 ## 📊 Power BI Dashboard
@@ -213,25 +229,31 @@ The interactive Power BI dashboard includes:
 
 ---
 
+## ⚠️ Limitations & Next Steps
+
+- The dataset is a single flat table, so joins were performed between aggregated CTEs rather than separate raw tables.
+- Inventory value is summed across daily snapshots; a latest-date or average-daily view is more appropriate for balance-sheet reporting.
+- The analysis is descriptive. A next step would be building a predictive model for stockout risk and improving the demand forecast.
+
+---
+
 ## 📁 Project Structure
 
 ```text
-supply-chain-inventory-analytics/
+Supply-Chain-Inventory-Analytics/
 │
-├── data/
-│   └── supply_chain_dataset1.csv
+├── README.md
 │
-├── python/
-│   ├── data_cleaning.py
-│   └── import_to_mysql.py
-│
-├── sql/
-│   └── supply_chain_analysis.sql
-│
-├── PowerBI/
-│   └── Supply_Chain_Inventory_Analytics.pbix
-│
-├── Dashboard/
-│   └── dashboard.png
-│
-└── README.md
+└── Supply_Chain_Inventory_Analytics/
+    ├── data/
+    │   └── supply_chain_dataset1.csv
+    ├── python/
+    │   ├── data_cleaning.py
+    │   └── import_to_mysql.py
+    ├── sql/
+    │   └── supply_chain_analysis.sql
+    ├── powerbi/
+    │   └── Supply_Chain_Inventory_Analytics.pbix
+    └── screenshots/
+        └── dashboard.png
+```
